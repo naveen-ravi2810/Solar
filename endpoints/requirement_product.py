@@ -3,10 +3,12 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db import get_session
 from sqlmodel import select
-from models.product import Product, ProductInRequirement, Requirement, RequirementProducts, RequirementProductsCreate
+from models.product import Product, ProductInRequirement, Requirement, RequirementProducts, RequirementProductsCreate, UpdateProductRequirement
 from typing import List
 from uuid import UUID
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy.exc import SQLAlchemyError
+
 
 
 router = APIRouter()
@@ -84,5 +86,33 @@ async def deleteRequirementProductById(req_prd_id: UUID, session: AsyncSession =
             await session.delete(instance)
             await session.commit()
             return 
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch("/requirementproducts")
+async def update_product_requirement(
+    update_data: UpdateProductRequirement,
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        result = await session.execute(
+            select(RequirementProducts).where(
+                RequirementProducts.prd_req_id == update_data.prd_req_id
+            )
+        )
+        product = result.scalar_one_or_none()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+        product.prod_quantity = update_data.prod_quantity
+        await session.commit()
+        await session.refresh(product)
+
+        return {"status": "success", "data": product}
+
+    except SQLAlchemyError as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -18,6 +18,13 @@ class Product(SQLModel, table=True):
     prd_gst: float = Field(ge=0, le=100)
     ctg_id: UUID = Field(foreign_key="category.ctg_id")
 
+class ProductCreate(BaseModel):
+    prod_name: str =  Field(min_length=3)
+    prd_capacity: int = Field()
+    prd_price: float = Field(gt=0)
+    prd_gst: float = Field(ge=0, le=100)
+    ctg_id: UUID
+
 
 class ProductRead(BaseModel):
     prd_id: UUID
@@ -63,3 +70,8 @@ class ProductInRequirement(BaseModel):
     req_name: str
     req_id: UUID
     prd_req_id: UUID
+
+
+class UpdateProductRequirement(BaseModel):
+    prd_req_id: UUID
+    prod_quantity: int
