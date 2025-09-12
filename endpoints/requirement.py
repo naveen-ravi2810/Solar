@@ -11,6 +11,7 @@ from uuid import UUID
 
 router = APIRouter()
 
+
 @router.post("/requirement", response_model=Requirement)
 async def create_requirement(
     req_data: RequirementCreate, session: AsyncSession = Depends(get_session)
@@ -24,7 +25,6 @@ async def create_requirement(
         return requirement
     except Exception as e:
         return HTTPException(status_code=400, detail=f"{str(e)}")
-
 
 
 @router.get("/requirement")
@@ -54,7 +54,8 @@ async def get_requirements(session: AsyncSession = Depends(get_session)):
         .join(
             Product, Product.prd_id == RequirementProducts.prod_id, isouter=True
         )  # LEFT JOIN
-        .group_by(Requirement.req_id, Requirement.req_name, Requirement.created_at).order_by(Requirement.req_name)
+        .group_by(Requirement.req_id, Requirement.req_name, Requirement.created_at)
+        .order_by(Requirement.req_name)
     )
 
     result = await session.execute(stmt)
@@ -73,18 +74,22 @@ async def get_requirements(session: AsyncSession = Depends(get_session)):
     return requirements
 
 
-
 @router.delete("/requirement/{req_id}")
-async def delete_requirements(req_id: UUID, session: AsyncSession= Depends(get_session)):
+async def delete_requirements(
+    req_id: UUID, session: AsyncSession = Depends(get_session)
+):
     try:
-        statement = select(Requirement).where(Requirement.req_id == req_id )
+        statement = select(Requirement).where(Requirement.req_id == req_id)
         instance = (await session.exec(statement=statement)).one()
         if instance:
             await session.delete(instance)
             await session.commit()
-            return JSONResponse(content={
-                "message": "Deleted Successfully",
-            }, status_code=204)
+            return JSONResponse(
+                content={
+                    "message": "Deleted Successfully",
+                },
+                status_code=204,
+            )
         else:
             return HTTPException(status_code=400, detail=f"Not Found")
     except Exception as e:

@@ -3,19 +3,24 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.db import get_session
 from sqlmodel import select
-from models.product import Product, ProductInRequirement, Requirement, RequirementProducts, RequirementProductsCreate, UpdateProductRequirement
+from models.product import (
+    Product,
+    ProductInRequirement,
+    Requirement,
+    RequirementProducts,
+    RequirementProductsCreate,
+    UpdateProductRequirement,
+)
 from typing import List
 from uuid import UUID
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.exc import SQLAlchemyError
 
 
-
 router = APIRouter()
 
-@router.get(
-    "/requirementproducts/{req_id}", response_model=List[ProductInRequirement]
-)
+
+@router.get("/requirementproducts/{req_id}", response_model=List[ProductInRequirement])
 async def get_products_by_req_id(
     req_id: UUID, session: AsyncSession = Depends(get_session)
 ):
@@ -29,7 +34,7 @@ async def get_products_by_req_id(
             RequirementProducts.prod_quantity,
             Requirement.req_name,
             RequirementProducts.req_id,
-            RequirementProducts.prd_req_id
+            RequirementProducts.prd_req_id,
         )
         .join(Product, Product.prd_id == RequirementProducts.prod_id)
         .join(Requirement, Requirement.req_id == RequirementProducts.req_id)
@@ -39,7 +44,6 @@ async def get_products_by_req_id(
     result = await session.execute(stmt)
     rows = result.all()
     return rows
-
 
 
 @router.post("/requirementproducts")
@@ -76,16 +80,20 @@ async def create_product_in_the_requirement_product_table(
 
 
 @router.delete("/requirementproducts/{req_prd_id}")
-async def deleteRequirementProductById(req_prd_id: UUID, session: AsyncSession = Depends(get_session)):
+async def deleteRequirementProductById(
+    req_prd_id: UUID, session: AsyncSession = Depends(get_session)
+):
     try:
         print(req_prd_id)
-        statement = select(RequirementProducts).where(RequirementProducts.prd_req_id == req_prd_id)
+        statement = select(RequirementProducts).where(
+            RequirementProducts.prd_req_id == req_prd_id
+        )
         instance = (await session.exec(statement=statement)).one()
         print(instance.prd_req_id)
         if instance:
             await session.delete(instance)
             await session.commit()
-            return 
+            return
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

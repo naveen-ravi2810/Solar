@@ -1,0 +1,91 @@
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; margin: 40px; }
+    h1 { text-align: center; margin-bottom: 5px; }
+    .company { text-align: center; font-size: 12px; }
+    .section { margin-top: 20px; }
+    .flex { display: flex; justify-content: space-between; }
+    .block { width: 48%; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid black; padding: 6px; font-size: 12px; }
+    th { background: #f2f2f2; }
+    .right { text-align: right; }
+    .totals { margin-top: 15px; width: 40%; float: right; }
+    .totals td { border: none; }
+    .footer { margin-top: 40px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>SOFT SOLAR</h1>
+  <p class="company">
+    No 34, Indus Anantya, Natham Link Road, Egatoor, Navalur, Chennai - 600130 <br>
+    Email: arivu@soft-solar.com | Phone: 9442999555 / 7338744338
+  </p>
+
+  <div class="section flex">
+    <div class="block">
+      <h3>Billing To</h3>
+      <p>
+        {{ quotation.quot_billing_to_1 }} <br>
+        {{ quotation.quot_billing_to_2 }} <br>
+        {{ quotation.quot_billing_to_3 }}
+      </p>
+    </div>
+    <div class="block">
+      <h3>Shipping To</h3>
+      <p>
+        {{ quotation.quot_billing_from_1 }} <br>
+        {{ quotation.quot_billing_from_2 }} <br>
+        {{ quotation.quot_billing_from_3 }}
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <table>
+      <tr>
+        <th>Description</th>
+        <th class="right">Cost</th>
+      </tr>
+      {% for p in products %}
+      <tr>
+        <td>{{ p.name }} - {{ p.capacity }} (x{{ p.qty }}) <br/> <strong>Description</strong> {{ p.description }}</td>
+        <td class="right">{{ "%.2f"|format(p.total) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <table class="totals">
+    <tr><td>Sub Total:</td><td class="right">Rs {{ "%.2f"|format(sub_total) }}</td></tr>
+    <tr><td>CGST:</td><td class="right">Rs {{ "%.2f"|format(cgst) }}</td></tr>
+    <tr><td>SGST:</td><td class="right">Rs {{ "%.2f"|format(sgst) }}</td></tr>
+    <tr><td><b>Total Cost:</b></td><td class="right"><b>Rs {{ "%.2f"|format(total) }}</b></td></tr>
+  </table>
+
+  <div class="footer">
+    <h3>Bank Details</h3>
+    <p>
+      Account Holder Name: {{ quotation.quot_ba_holder_name }} <br>
+      Account No: {{ quotation.quot_ba_acc_no }} <br>
+      IFSC No: {{ quotation.quot_ba_ifsc_no }} <br>
+      Branch: {{ quotation.quot_ba_branch }}
+    </p>
+
+    <h3>Notes</h3>
+    <p>
+      Warranty <br>
+      Panel: {{ quotation.quot_warranty_panel }} years <br>
+      Inverter: {{ quotation.quot_warranty_Inverter }} years <br>
+      Battery: {{ quotation.quot_warranty_battery }} years
+    </p>
+
+    <p>
+      Quotation Number: {{ quotation.quot_id }} <br>
+      Quotation Date: {{ quotation.created_on.strftime("%d/%m/%Y") }} <br>
+      Quotation Warranty: {{ quotation.quot_expire_date }} days from Quotation Date
+    </p>
+  </div>
+</body>
+</html>

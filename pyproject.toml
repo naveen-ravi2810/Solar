@@ -12,4 +12,5 @@ dependencies = [
     "pydantic-settings>=2.10.1",
     "ruff>=0.12.9",
     "sqlmodel>=0.0.24",
+    "weasyprint>=66.0",
 ]
