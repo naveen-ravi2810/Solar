@@ -17,6 +17,7 @@ class ClientConsumerRead(SQLModel):
     clinet_consumer_phone_number: Optional[str]
     clinet_consumer_nick_name: Optional[str]
 
+
 class ClientConsumerUpdate(SQLModel):
     clinet_consumer_meter_type: Optional[str] = None
     clinet_consumer_demand_load: Optional[int] = None

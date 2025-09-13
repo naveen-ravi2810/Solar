@@ -3,6 +3,8 @@ from uuid import UUID, uuid4
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
+from sqlalchemy import Enum as SQLEnum  # SQLAlchemy Enum
+from enum import Enum
 
 
 class Category(SQLModel, table=True):
@@ -92,6 +94,7 @@ class CreateClient(SQLModel):
     client_phone: str = Field(min_length=9)
     client_email: str
 
+
 class CreateBasicClientConsumer(SQLModel):
     client_id: UUID = Field(foreign_key="clients.client_id", ondelete="CASCADE")
     clinet_consumer_number: str
@@ -121,6 +124,35 @@ class Clients(CreateClient, table=True):
     created_on: datetime = Field(default_factory=datetime.now)
     client_consumers: List[ClientConsumer] = Relationship(back_populates="client")
 
+
+class ApplianceLoadType(str, Enum):
+    LIGHT = "LIGHT"
+    HEAVY = "HEAVY"
+    INDUCTION = "INDUCTION"
+
+
+class CreateAppliances(SQLModel):
+    appliance_name: str
+    appliance_volt: float = Field(gt=0)
+    appliance_load_type: ApplianceLoadType = Field(
+        default=ApplianceLoadType.LIGHT, sa_column=SQLEnum(ApplianceLoadType)
+    )
+
+
+class Appliances(CreateAppliances, table=True):
+    appliance_id: UUID = Field(default_factory=uuid4, primary_key=True)
+
+class CreateConsumerAppliancesUsage(SQLModel):
+    appliance_name: str
+    appliance_watt: float = Field(gt=0)
+    appliance_quantity: int = Field(gt=0)
+    appliance_day_usage: float = Field(default=0)
+    appliance_night_usage: float = Field(default=0)
+    exclude_for_calculation: bool = Field(default=False)
+    ccm_id: UUID = Field(foreign_key="clientconsumer.ccm_id", ondelete="CASCADE")
+
+class ConsumerAppliancesUsage(CreateConsumerAppliancesUsage, table=True):
+    cau_id: UUID = Field(primary_key=True, default_factory=uuid4)
 
 class ClientRequirement(SQLModel, table=True):
     __tablename__ = "client_requirement"
