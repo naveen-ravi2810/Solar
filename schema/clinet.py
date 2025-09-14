@@ -2,6 +2,7 @@ from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 from sqlmodel import SQLModel
+from models.product import ClientConsumerBillingType
 
 
 class ClientConsumerRead(SQLModel):
@@ -16,6 +17,7 @@ class ClientConsumerRead(SQLModel):
     clinet_consumer_number: Optional[str]
     clinet_consumer_phone_number: Optional[str]
     clinet_consumer_nick_name: Optional[str]
+    clinet_consumer_billing_type: str
 
 
 class ClientConsumerUpdate(SQLModel):
@@ -29,6 +31,9 @@ class ClientConsumerUpdate(SQLModel):
     clinet_consumer_number: Optional[str] = None
     clinet_consumer_phone_number: Optional[str] = None
     clinet_consumer_nick_name: Optional[str] = None
+    clinet_consumer_billing_type: ClientConsumerBillingType = (
+        ClientConsumerBillingType.BI_MONTHLY
+    )
 
 
 class ClientRead(SQLModel):

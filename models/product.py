@@ -102,6 +102,11 @@ class CreateBasicClientConsumer(SQLModel):
     clinet_consumer_nick_name: str
 
 
+class ClientConsumerBillingType(str, Enum):
+    MONTHLY = "MONTHLY"
+    BI_MONTHLY = "BI_MONTHLY"
+
+
 class CreateClinetConsumer(CreateBasicClientConsumer):
     clinet_consumer_meter_type: Optional[str]  # mabe the choices
     clinet_consumer_demand_load: int = Field(gt=0, default=1)
@@ -112,6 +117,10 @@ class CreateClinetConsumer(CreateBasicClientConsumer):
     client_consumer_avg_consumed_unit: Optional[int]
     client_consumer_peak_demand: Optional[int]
     client_consumer_avg_demand: Optional[int]
+    clinet_consumer_billing_type: ClientConsumerBillingType = Field(
+        default=ClientConsumerBillingType.MONTHLY,
+        sa_column=SQLEnum(ClientConsumerBillingType),
+    )
 
 
 class ClientConsumer(CreateClinetConsumer, table=True):
@@ -122,6 +131,7 @@ class ClientConsumer(CreateClinetConsumer, table=True):
 class Clients(CreateClient, table=True):
     client_id: UUID = Field(primary_key=True, default_factory=uuid4)
     created_on: datetime = Field(default_factory=datetime.now)
+    is_deleted: bool = Field(default=False)
     client_consumers: List[ClientConsumer] = Relationship(back_populates="client")
 
 
@@ -142,6 +152,7 @@ class CreateAppliances(SQLModel):
 class Appliances(CreateAppliances, table=True):
     appliance_id: UUID = Field(default_factory=uuid4, primary_key=True)
 
+
 class CreateConsumerAppliancesUsage(SQLModel):
     appliance_name: str
     appliance_watt: float = Field(gt=0)
@@ -149,10 +160,13 @@ class CreateConsumerAppliancesUsage(SQLModel):
     appliance_day_usage: float = Field(default=0)
     appliance_night_usage: float = Field(default=0)
     exclude_for_calculation: bool = Field(default=False)
+    need_battery_backup: bool = Field(default=True)
     ccm_id: UUID = Field(foreign_key="clientconsumer.ccm_id", ondelete="CASCADE")
+
 
 class ConsumerAppliancesUsage(CreateConsumerAppliancesUsage, table=True):
     cau_id: UUID = Field(primary_key=True, default_factory=uuid4)
+
 
 class ClientRequirement(SQLModel, table=True):
     __tablename__ = "client_requirement"
