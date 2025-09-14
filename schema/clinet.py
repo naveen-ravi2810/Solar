@@ -18,6 +18,7 @@ class ClientConsumerRead(SQLModel):
     clinet_consumer_phone_number: Optional[str]
     clinet_consumer_nick_name: Optional[str]
     clinet_consumer_billing_type: str
+    clinet_consumer_requirement: Optional[str]
 
 
 class ClientConsumerUpdate(SQLModel):
@@ -34,6 +35,7 @@ class ClientConsumerUpdate(SQLModel):
     clinet_consumer_billing_type: ClientConsumerBillingType = (
         ClientConsumerBillingType.BI_MONTHLY
     )
+    clinet_consumer_requirement: Optional[str]
 
 
 class ClientRead(SQLModel):

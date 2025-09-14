@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
-from sqlalchemy import Enum as SQLEnum  # SQLAlchemy Enum
+from sqlalchemy import Enum as SQLEnum
 from enum import Enum
 
 
@@ -23,6 +23,8 @@ class Product(SQLModel, table=True):
     show_prd_product: bool = Field(default=True)
     show_prd_price: bool = Field(default=True)
     show_prd_quantity: bool = Field(default=True)
+    requirements: List["RequirementProducts"] = Relationship(back_populates="product")
+    consumer_requirement_product: List["ConsumerRequirementProduct"] = Relationship(back_populates="product_details")
 
 
 class ProductCreate(BaseModel):
@@ -54,9 +56,18 @@ class RequirementCreate(SQLModel):
     req_name: str = Field(min_length=3)
 
 
+class UpdateRequirement(BaseModel):
+    req_name: str = Field(min_length=3)
+    req_kilo_watt: int = Field(default=2)
+
+
 class Requirement(RequirementCreate, table=True):
     req_id: UUID = Field(primary_key=True, default_factory=uuid4)
     created_at: datetime = Field(default_factory=datetime.now)
+    req_kilo_watt: int = Field(default=2)
+    products_link: List["RequirementProducts"] = Relationship(
+        back_populates="requirement"
+    )
 
 
 class RequirementProductsCreate(SQLModel):
@@ -69,6 +80,8 @@ class RequirementProductsCreate(SQLModel):
 
 class RequirementProducts(RequirementProductsCreate, table=True):
     prd_req_id: UUID = Field(primary_key=True, default_factory=uuid4)
+    product: Optional["Product"] = Relationship(back_populates="requirements")
+    requirement: Optional["Requirement"] = Relationship(back_populates="products_link")
 
 
 class ProductInRequirement(BaseModel):
@@ -96,7 +109,9 @@ class CreateClient(SQLModel):
 
 
 class CreateBasicClientConsumer(SQLModel):
-    client_id: UUID = Field(foreign_key="clients.client_id", ondelete="CASCADE")
+    client_id: UUID = Field(
+        foreign_key="clients.client_id", ondelete="CASCADE", index=True
+    )
     clinet_consumer_number: str
     clinet_consumer_phone_number: str
     clinet_consumer_nick_name: str
@@ -121,6 +136,7 @@ class CreateClinetConsumer(CreateBasicClientConsumer):
         default=ClientConsumerBillingType.MONTHLY,
         sa_column=SQLEnum(ClientConsumerBillingType),
     )
+    clinet_consumer_requirement: str = Field(description="This is the core requirement of the client", default="")
 
 
 class ClientConsumer(CreateClinetConsumer, table=True):
@@ -161,31 +177,54 @@ class CreateConsumerAppliancesUsage(SQLModel):
     appliance_night_usage: float = Field(default=0)
     exclude_for_calculation: bool = Field(default=False)
     need_battery_backup: bool = Field(default=True)
-    ccm_id: UUID = Field(foreign_key="clientconsumer.ccm_id", ondelete="CASCADE")
+    ccm_id: UUID = Field(
+        foreign_key="clientconsumer.ccm_id", ondelete="CASCADE", index=True
+    )
 
 
 class ConsumerAppliancesUsage(CreateConsumerAppliancesUsage, table=True):
     cau_id: UUID = Field(primary_key=True, default_factory=uuid4)
 
 
-class ClientRequirement(SQLModel, table=True):
-    __tablename__ = "client_requirement"
-    creq_id: UUID = Field(primary_key=True, default_factory=uuid4)
-    created_on: datetime = Field(default_factory=datetime.now)
-    client_id: UUID = Field(foreign_key="clients.client_id", ondelete="CASCADE")
-    creq_name: str
+# class ClientRequirement(SQLModel, table=True):
+#     __tablename__ = "client_requirement"
+#     creq_id: UUID = Field(primary_key=True, default_factory=uuid4)
+#     created_on: datetime = Field(default_factory=datetime.now)
+#     client_id: UUID = Field(foreign_key="clients.client_id", ondelete="CASCADE")
+#     creq_name: str
 
 
-class ClientRequirementProducts(SQLModel, table=True):
-    __tablename__ = "client_requirement_products"
-    crp_id: UUID = Field(primary_key=True, default_factory=uuid4)
-    creq_id: UUID = Field(foreign_key="client_requirement.creq_id", ondelete="CASCADE")
-    prd_id: UUID = Field(foreign_key="product.prd_id", ondelete="CASCADE")
-    quantity: int = Field(gt=0)
-    description: str
+# class ClientRequirementProducts(SQLModel, table=True):
+#     __tablename__ = "client_requirement_products"
+#     crp_id: UUID = Field(primary_key=True, default_factory=uuid4)
+#     creq_id: UUID = Field(foreign_key="client_requirement.creq_id", ondelete="CASCADE")
+#     prd_id: UUID = Field(foreign_key="product.prd_id", ondelete="CASCADE")
+#     quantity: int = Field(gt=0)
+#     description: str
 
 
-class CreateClientRequirement(BaseModel):
-    client_id: UUID
+class CreateConsumerRequirement(BaseModel):
+    ccm_id: UUID
     creq_name: str = Field(min_length=4)
     req_id: UUID
+
+class ConsumerRequirement(SQLModel, table=True):
+    __tablename__ = "consumer_requirement"
+    con_req_id: UUID = Field(primary_key=True, default_factory=uuid4)
+    ccm_id: UUID = Field(
+        foreign_key="clientconsumer.ccm_id", ondelete="CASCADE", index=True
+    )
+    created_on: datetime = Field(default_factory=datetime.now)
+    creq_name: str
+    consumer_requirement_descriptin: str = Field(default="")
+    proposed_recommandation: str = Field(default="")
+    consumer_requirement_products: List["ConsumerRequirementProduct"] = Relationship(back_populates="consumer_requirement")
+
+class ConsumerRequirementProduct(SQLModel, table=True):
+    __tablename__ = "consumer_requirement_products"
+    conrp_id: UUID = Field(primary_key=True, default_factory=uuid4)
+    con_req_id: UUID = Field(foreign_key="consumer_requirement.con_req_id", ondelete="CASCADE")
+    prd_id: UUID = Field(foreign_key="product.prd_id", ondelete="CASCADE")
+    quantity: int = Field(gt=0)
+    consumer_requirement: Optional[ConsumerRequirement] = Relationship(back_populates="consumer_requirement_products")
+    product_details: Optional[Product] = Relationship(back_populates="consumer_requirement_product")

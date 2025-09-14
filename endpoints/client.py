@@ -13,7 +13,6 @@ from sqlmodel import select, text
 from sqlalchemy.orm import joinedload
 from schema.clinet import ClientRead
 
-from models.clinet_with_consumers import ClientWithConsumers
 
 
 router = APIRouter()
@@ -38,7 +37,9 @@ async def get_clients(client_id: UUID, session: AsyncSession = Depends(get_sessi
         # Use parameterized query to avoid SQL injection
         query = text("SELECT * FROM client_with_consumers WHERE client_id = :client_id")
         result = await session.execute(query, {"client_id": str(client_id)})
-        client_data = result.mappings().first()  # Get the first row as a dict-like object
+        client_data = (
+            result.mappings().first()
+        )  # Get the first row as a dict-like object
 
         if not client_data:
             raise HTTPException(status_code=404, detail="Client not found")

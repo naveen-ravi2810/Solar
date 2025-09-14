@@ -4,10 +4,10 @@ from .category import router as category_router
 from .requirement import router as requirement_router
 from .requirement_product import router as requirement_product_router
 from .client import router as client_router
-from .client_requirement import router as client_requirement_router
 from .client_consumer import router as client_consumer_router
 from .appliances import router as appliances_router
 from .consumerapplianceusage import router as consumerapplianceusage_router
+from .consumer_requirements import router as consumer_requirement_router
 # from .pdf import router as pdf_router
 # from .quotation import router as quotation_router
 
@@ -19,11 +19,14 @@ v1_router.include_router(product_router, tags=["Product"])
 v1_router.include_router(requirement_router, tags=["Requirement"])
 v1_router.include_router(requirement_product_router, tags=["Requirement Product"])
 v1_router.include_router(client_router, tags=["Client"])
-v1_router.include_router(client_requirement_router, tags=["Client Requirement Product"])
 v1_router.include_router(client_consumer_router, tags=["Client Cosnumer"])
 v1_router.include_router(appliances_router, tags=["Appliances"])
 v1_router.include_router(
     consumerapplianceusage_router, tags=["Consumer Application Usage"]
 )
+v1_router.include_router(
+    consumer_requirement_router, tags=["Consumer Requirement"]
+)
+consumer_requirement_router
 # v1_router.include_router(pdf_router, tags=["PDF generation"])
 # v1_router.include_router(quotation_router, tags=["Quotation"])
