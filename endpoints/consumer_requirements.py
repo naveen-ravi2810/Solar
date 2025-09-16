@@ -4,11 +4,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from core.db import get_session
 from uuid import UUID
-from models.product import CreateConsumerRequirement, Requirement, RequirementProducts, ConsumerRequirement, ClientConsumer, ConsumerRequirementProduct
-from sqlalchemy.orm import selectinload
+from models.product import (
+    CreateConsumerRequirement,
+    Requirement,
+    RequirementProducts,
+    ConsumerRequirement,
+    ClientConsumer,
+    ConsumerRequirementProduct,
+    Product,
+)
+from sqlalchemy.orm import selectinload, joinedload
 from schema.CosnumerRequirementProduct import ConsumerRequirementRead
 
 router = APIRouter()
+
 
 @router.post("/consumer_requirement")
 async def create_consumer_requirement(
@@ -23,7 +32,9 @@ async def create_consumer_requirement(
         products = (await session.exec(products_stmt)).all()
 
         if not products:
-            raise HTTPException(status_code=404, detail="No products found for this requirement")
+            raise HTTPException(
+                status_code=404, detail="No products found for this requirement"
+            )
 
         # Step 2: Fetch the consumer description
         consumer_stmt = select(ClientConsumer).where(
@@ -60,9 +71,13 @@ async def create_consumer_requirement(
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
 
-@router.get("/consumer_requirement/{con_req_id}", response_model=ConsumerRequirementRead)
+
+
+
+@router.get(
+    "/consumer_requirement/{con_req_id}", response_model=ConsumerRequirementRead
+)
 async def get_consumer_requirement_details_by_id(
     con_req_id: UUID, session: AsyncSession = Depends(get_session)
 ):
@@ -70,17 +85,19 @@ async def get_consumer_requirement_details_by_id(
         stmt = (
             select(ConsumerRequirement)
             .where(ConsumerRequirement.con_req_id == con_req_id)
+            .join(ConsumerRequirement.consumer_requirement_products)
+            .join(ConsumerRequirementProduct.product_details)
             .options(
-                selectinload(ConsumerRequirement.consumer_requirement_products)
-                .selectinload(ConsumerRequirementProduct.product_details)
+                joinedload(
+                    ConsumerRequirement.consumer_requirement_products
+                ).joinedload(ConsumerRequirementProduct.product_details)
             )
+            .order_by(Product.prod_name)  # ✅ use actual column
         )
         result = (await session.exec(stmt)).unique().one_or_none()
-
         if not result:
             raise HTTPException(status_code=404, detail="No requirement found")
-
-        return result  # SQLModel auto-converts to ConsumerRequirementRead schema
-
+        return result
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail=str(e))

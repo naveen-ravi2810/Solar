@@ -8,6 +8,7 @@ from .client_consumer import router as client_consumer_router
 from .appliances import router as appliances_router
 from .consumerapplianceusage import router as consumerapplianceusage_router
 from .consumer_requirements import router as consumer_requirement_router
+from .consumer_requirement_product import router as consumer_requirement_product_router
 # from .pdf import router as pdf_router
 # from .quotation import router as quotation_router
 
@@ -24,8 +25,9 @@ v1_router.include_router(appliances_router, tags=["Appliances"])
 v1_router.include_router(
     consumerapplianceusage_router, tags=["Consumer Application Usage"]
 )
+v1_router.include_router(consumer_requirement_router, tags=["Consumer Requirement"])
 v1_router.include_router(
-    consumer_requirement_router, tags=["Consumer Requirement"]
+    consumer_requirement_product_router, tags=["Consumer Requirement Product"]
 )
 consumer_requirement_router
 # v1_router.include_router(pdf_router, tags=["PDF generation"])

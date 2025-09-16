@@ -24,7 +24,9 @@ class Product(SQLModel, table=True):
     show_prd_price: bool = Field(default=True)
     show_prd_quantity: bool = Field(default=True)
     requirements: List["RequirementProducts"] = Relationship(back_populates="product")
-    consumer_requirement_product: List["ConsumerRequirementProduct"] = Relationship(back_populates="product_details")
+    consumer_requirement_product: List["ConsumerRequirementProduct"] = Relationship(
+        back_populates="product_details"
+    )
 
 
 class ProductCreate(BaseModel):
@@ -136,7 +138,9 @@ class CreateClinetConsumer(CreateBasicClientConsumer):
         default=ClientConsumerBillingType.MONTHLY,
         sa_column=SQLEnum(ClientConsumerBillingType),
     )
-    clinet_consumer_requirement: str = Field(description="This is the core requirement of the client", default="")
+    clinet_consumer_requirement: str = Field(
+        description="This is the core requirement of the client", default=""
+    )
 
 
 class ClientConsumer(CreateClinetConsumer, table=True):
@@ -208,6 +212,7 @@ class CreateConsumerRequirement(BaseModel):
     creq_name: str = Field(min_length=4)
     req_id: UUID
 
+
 class ConsumerRequirement(SQLModel, table=True):
     __tablename__ = "consumer_requirement"
     con_req_id: UUID = Field(primary_key=True, default_factory=uuid4)
@@ -218,13 +223,23 @@ class ConsumerRequirement(SQLModel, table=True):
     creq_name: str
     consumer_requirement_descriptin: str = Field(default="")
     proposed_recommandation: str = Field(default="")
-    consumer_requirement_products: List["ConsumerRequirementProduct"] = Relationship(back_populates="consumer_requirement")
+    consumer_requirement_products: List["ConsumerRequirementProduct"] = Relationship(
+        back_populates="consumer_requirement"
+    )
+
 
 class ConsumerRequirementProduct(SQLModel, table=True):
     __tablename__ = "consumer_requirement_products"
     conrp_id: UUID = Field(primary_key=True, default_factory=uuid4)
-    con_req_id: UUID = Field(foreign_key="consumer_requirement.con_req_id", ondelete="CASCADE")
+    con_req_id: UUID = Field(
+        foreign_key="consumer_requirement.con_req_id", ondelete="CASCADE"
+    )
     prd_id: UUID = Field(foreign_key="product.prd_id", ondelete="CASCADE")
     quantity: int = Field(gt=0)
-    consumer_requirement: Optional[ConsumerRequirement] = Relationship(back_populates="consumer_requirement_products")
-    product_details: Optional[Product] = Relationship(back_populates="consumer_requirement_product")
+    consumer_requirement: Optional[ConsumerRequirement] = Relationship(
+        back_populates="consumer_requirement_products"
+    )
+    product_details: Optional[Product] = Relationship(
+        back_populates="consumer_requirement_product"
+    )
+    __table_args__ = (UniqueConstraint("con_req_id", "prd_id", name="uq_con_req_prd"),)

@@ -14,7 +14,6 @@ from sqlalchemy.orm import joinedload
 from schema.clinet import ClientRead
 
 
-
 router = APIRouter()
 
 
