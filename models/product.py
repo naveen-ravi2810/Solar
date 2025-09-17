@@ -5,14 +5,32 @@ from datetime import datetime
 from pydantic import BaseModel
 from sqlalchemy import Enum as SQLEnum
 from enum import Enum
+from sqlalchemy import func
 
 
-class Category(SQLModel, table=True):
+# ---------- Common Timestamp Mixin ----------
+class TimestampMixin(SQLModel):
+    created_on: datetime = Field(
+        sa_column_kwargs={"server_default": func.now()},
+        nullable=False,
+    )
+    updated_on: datetime = Field(
+        sa_column_kwargs={
+            "server_default": func.now(),
+            "onupdate": func.now(),
+        },
+        nullable=False,
+    )
+
+
+# ---------- Category ----------
+class Category(TimestampMixin, SQLModel, table=True):
     ctg_id: UUID = Field(primary_key=True, default_factory=uuid4)
     ctg_name: str = Field()
 
 
-class Product(SQLModel, table=True):
+# ---------- Product ----------
+class Product(TimestampMixin, SQLModel, table=True):
     prd_id: UUID = Field(primary_key=True, default_factory=uuid4)
     prod_name: str = Field(min_length=3)
     prd_capacity: int = Field()
@@ -54,6 +72,7 @@ class ProductRead(BaseModel):
     show_prd_quantity: bool
 
 
+# ---------- Requirement ----------
 class RequirementCreate(SQLModel):
     req_name: str = Field(min_length=3)
 
@@ -63,9 +82,8 @@ class UpdateRequirement(BaseModel):
     req_kilo_watt: int = Field(default=2)
 
 
-class Requirement(RequirementCreate, table=True):
+class Requirement(TimestampMixin, RequirementCreate, table=True):
     req_id: UUID = Field(primary_key=True, default_factory=uuid4)
-    created_at: datetime = Field(default_factory=datetime.now)
     req_kilo_watt: int = Field(default=2)
     products_link: List["RequirementProducts"] = Relationship(
         back_populates="requirement"
@@ -80,7 +98,7 @@ class RequirementProductsCreate(SQLModel):
     __table_args__ = (UniqueConstraint("req_id", "prod_id", name="uq_req_prod"),)
 
 
-class RequirementProducts(RequirementProductsCreate, table=True):
+class RequirementProducts(TimestampMixin, RequirementProductsCreate, table=True):
     prd_req_id: UUID = Field(primary_key=True, default_factory=uuid4)
     product: Optional["Product"] = Relationship(back_populates="requirements")
     requirement: Optional["Requirement"] = Relationship(back_populates="products_link")
@@ -103,8 +121,8 @@ class UpdateProductRequirement(BaseModel):
     prod_quantity: int
 
 
+# ---------- Clients & Consumers ----------
 class CreateClient(SQLModel):
-    # Add latitude and longitude and fetch address
     client_name: str
     client_phone: str = Field(min_length=9)
     client_email: str
@@ -125,11 +143,9 @@ class ClientConsumerBillingType(str, Enum):
 
 
 class CreateClinetConsumer(CreateBasicClientConsumer):
-    clinet_consumer_meter_type: Optional[str]  # mabe the choices
+    clinet_consumer_meter_type: Optional[str]
     clinet_consumer_demand_load: int = Field(gt=0, default=1)
-    clinet_consumed_demand_phase: int = Field(
-        gt=0, le=3, default=1
-    )  # make dropdown 1 or 3 in frontend
+    clinet_consumed_demand_phase: int = Field(gt=0, le=3, default=1)
     client_consumer_max_consumed_units: Optional[int]
     client_consumer_avg_consumed_unit: Optional[int]
     client_consumer_peak_demand: Optional[int]
@@ -143,18 +159,18 @@ class CreateClinetConsumer(CreateBasicClientConsumer):
     )
 
 
-class ClientConsumer(CreateClinetConsumer, table=True):
+class ClientConsumer(TimestampMixin, CreateClinetConsumer, table=True):
     ccm_id: UUID = Field(primary_key=True, default_factory=uuid4)
     client: Optional["Clients"] = Relationship(back_populates="client_consumers")
 
 
-class Clients(CreateClient, table=True):
+class Clients(TimestampMixin, CreateClient, table=True):
     client_id: UUID = Field(primary_key=True, default_factory=uuid4)
-    created_on: datetime = Field(default_factory=datetime.now)
     is_deleted: bool = Field(default=False)
     client_consumers: List[ClientConsumer] = Relationship(back_populates="client")
 
 
+# ---------- Appliances ----------
 class ApplianceLoadType(str, Enum):
     LIGHT = "LIGHT"
     HEAVY = "HEAVY"
@@ -169,7 +185,7 @@ class CreateAppliances(SQLModel):
     )
 
 
-class Appliances(CreateAppliances, table=True):
+class Appliances(TimestampMixin, CreateAppliances, table=True):
     appliance_id: UUID = Field(default_factory=uuid4, primary_key=True)
 
 
@@ -186,40 +202,23 @@ class CreateConsumerAppliancesUsage(SQLModel):
     )
 
 
-class ConsumerAppliancesUsage(CreateConsumerAppliancesUsage, table=True):
+class ConsumerAppliancesUsage(TimestampMixin, CreateConsumerAppliancesUsage, table=True):
     cau_id: UUID = Field(primary_key=True, default_factory=uuid4)
 
 
-# class ClientRequirement(SQLModel, table=True):
-#     __tablename__ = "client_requirement"
-#     creq_id: UUID = Field(primary_key=True, default_factory=uuid4)
-#     created_on: datetime = Field(default_factory=datetime.now)
-#     client_id: UUID = Field(foreign_key="clients.client_id", ondelete="CASCADE")
-#     creq_name: str
-
-
-# class ClientRequirementProducts(SQLModel, table=True):
-#     __tablename__ = "client_requirement_products"
-#     crp_id: UUID = Field(primary_key=True, default_factory=uuid4)
-#     creq_id: UUID = Field(foreign_key="client_requirement.creq_id", ondelete="CASCADE")
-#     prd_id: UUID = Field(foreign_key="product.prd_id", ondelete="CASCADE")
-#     quantity: int = Field(gt=0)
-#     description: str
-
-
+# ---------- Consumer Requirement ----------
 class CreateConsumerRequirement(BaseModel):
     ccm_id: UUID
     creq_name: str = Field(min_length=4)
     req_id: UUID
 
 
-class ConsumerRequirement(SQLModel, table=True):
+class ConsumerRequirement(TimestampMixin, SQLModel, table=True):
     __tablename__ = "consumer_requirement"
     con_req_id: UUID = Field(primary_key=True, default_factory=uuid4)
     ccm_id: UUID = Field(
         foreign_key="clientconsumer.ccm_id", ondelete="CASCADE", index=True
     )
-    created_on: datetime = Field(default_factory=datetime.now)
     creq_name: str
     consumer_requirement_descriptin: str = Field(default="")
     proposed_recommandation: str = Field(default="")
@@ -228,7 +227,7 @@ class ConsumerRequirement(SQLModel, table=True):
     )
 
 
-class ConsumerRequirementProduct(SQLModel, table=True):
+class ConsumerRequirementProduct(TimestampMixin, SQLModel, table=True):
     __tablename__ = "consumer_requirement_products"
     conrp_id: UUID = Field(primary_key=True, default_factory=uuid4)
     con_req_id: UUID = Field(
@@ -242,4 +241,5 @@ class ConsumerRequirementProduct(SQLModel, table=True):
     product_details: Optional[Product] = Relationship(
         back_populates="consumer_requirement_product"
     )
+
     __table_args__ = (UniqueConstraint("con_req_id", "prd_id", name="uq_con_req_prd"),)
