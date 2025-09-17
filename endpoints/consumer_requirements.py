@@ -73,8 +73,6 @@ async def create_consumer_requirement(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
-
 @router.get(
     "/consumer_requirement/{con_req_id}", response_model=ConsumerRequirementRead
 )

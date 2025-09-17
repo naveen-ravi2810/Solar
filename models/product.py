@@ -202,7 +202,9 @@ class CreateConsumerAppliancesUsage(SQLModel):
     )
 
 
-class ConsumerAppliancesUsage(TimestampMixin, CreateConsumerAppliancesUsage, table=True):
+class ConsumerAppliancesUsage(
+    TimestampMixin, CreateConsumerAppliancesUsage, table=True
+):
     cau_id: UUID = Field(primary_key=True, default_factory=uuid4)
 
 

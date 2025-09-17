@@ -4,7 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from core.db import get_session
 from uuid import UUID
-from schema.CosnumerRequirementProduct import ConsumerRequirementProductUpdate, ConsumerRequirementMultipleProductCreate
+from schema.CosnumerRequirementProduct import (
+    ConsumerRequirementProductUpdate,
+    ConsumerRequirementMultipleProductCreate,
+)
 from models.product import ConsumerRequirementProduct
 
 router = APIRouter()
@@ -37,7 +40,9 @@ async def update_consumer_requirement_product(
 
 
 @router.delete("/consumer_requirement_product/{conrp_id}")
-async def delete_consumer_requirement_product(conrp_id: UUID, session: AsyncSession = Depends(get_session)):
+async def delete_consumer_requirement_product(
+    conrp_id: UUID, session: AsyncSession = Depends(get_session)
+):
     try:
         statement = select(ConsumerRequirementProduct).where(
             ConsumerRequirementProduct.conrp_id == conrp_id
@@ -53,16 +58,15 @@ async def delete_consumer_requirement_product(conrp_id: UUID, session: AsyncSess
 
 @router.post("/consumer_requirement_product")
 async def add_products_to_requirement(
-    payload: ConsumerRequirementMultipleProductCreate, session: AsyncSession = Depends(get_session)
+    payload: ConsumerRequirementMultipleProductCreate,
+    session: AsyncSession = Depends(get_session),
 ):
     con_req_id = payload.con_req_id
-    products = payload.products 
+    products = payload.products
 
     for prod in products:
         new_item = ConsumerRequirementProduct(
-            con_req_id=con_req_id,
-            prd_id=prod.prod_id,
-            quantity=prod.quantity
+            con_req_id=con_req_id, prd_id=prod.prod_id, quantity=prod.quantity
         )
         session.add(new_item)
 
