@@ -60,7 +60,7 @@ async def get_requirement_details_by_id(
         select(
             Requirement.req_id,
             Requirement.req_name,
-            Requirement.created_at,
+            Requirement.created_on,
             Requirement.req_kilo_watt,
             TOTAL_COST_EXPR,
             TOTAL_RPODUCTS_EXPERSSION,
@@ -75,7 +75,7 @@ async def get_requirement_details_by_id(
         .group_by(
             Requirement.req_id,
             Requirement.req_name,
-            Requirement.created_at,
+            Requirement.created_on,
             Requirement.req_kilo_watt,
         )
         .order_by(Requirement.req_name)
@@ -88,7 +88,7 @@ async def get_requirement_details_by_id(
         return {
             "req_id": rows.req_id,
             "req_name": rows.req_name,
-            "created_at": rows.created_at,
+            "created_at": rows.created_on,
             "total_cost": rows.total_cost,
             "total_products": rows.total_products,
             "req_kilo_watt": rows.req_kilo_watt,
@@ -103,7 +103,7 @@ async def get_requirements(session: AsyncSession = Depends(get_session)):
         select(
             Requirement.req_id,
             Requirement.req_name,
-            Requirement.created_at,
+            Requirement.created_on,
             Requirement.req_kilo_watt,
             TOTAL_COST_EXPR,
             TOTAL_RPODUCTS_EXPERSSION,
@@ -118,7 +118,7 @@ async def get_requirements(session: AsyncSession = Depends(get_session)):
         .group_by(
             Requirement.req_id,
             Requirement.req_name,
-            Requirement.created_at,
+            Requirement.created_on,
             Requirement.req_kilo_watt,
         )
         .order_by(Requirement.req_name)
@@ -131,7 +131,7 @@ async def get_requirements(session: AsyncSession = Depends(get_session)):
         {
             "req_id": r.req_id,
             "req_name": r.req_name,
-            "created_at": r.created_at,
+            "created_at": r.created_on,
             "total_cost": float(r.total_cost),  # convert Numeric -> float
             "total_products": r.total_products,
             "req_kilo_watt": r.req_kilo_watt,
