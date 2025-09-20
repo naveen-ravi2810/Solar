@@ -13,6 +13,7 @@ class TimestampMixin(SQLModel):
     created_on: datetime = Field(
         sa_column_kwargs={"server_default": func.now()},
         nullable=False,
+        default=datetime.now()
     )
     updated_on: datetime = Field(
         sa_column_kwargs={
@@ -20,6 +21,7 @@ class TimestampMixin(SQLModel):
             "onupdate": func.now(),
         },
         nullable=False,
+        default=datetime.now()
     )
 
 

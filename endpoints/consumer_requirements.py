@@ -51,7 +51,8 @@ async def create_consumer_requirement(
             consumer_requirement_descriptin=consumer.clinet_consumer_requirement,
         )
         session.add(new_consumer_requirement)
-        await session.flush()  # flush to get new_consumer_requirement.creq_id
+        await session.commit()
+        await session.refresh(new_consumer_requirement)
 
         # Step 4: Create ConsumerRequirementProduct entries
         for product in products:
@@ -70,6 +71,7 @@ async def create_consumer_requirement(
     except HTTPException:
         raise
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail=str(e))
 
 
